@@ -10,7 +10,7 @@ from PIL import Image, ImageDraw
 # ─── CONFIG ────────────────────────────────────────────────────────────────────
 APP_TITLE = "MedVision AI"
 APP_SUBTITLE = "Intelligent Medical Scan Analysis Platform"
-DEFAULT_MIN_CONFIDENCE = 0.25
+DEFAULT_MIN_CONFIDENCE = 0.65
 ROBOFLOW_API_URL = "https://detect.roboflow.com"
 
 # Scan type → Roboflow model ID mapping (swap with your trained model IDs)
