@@ -1,0 +1,4 @@
+streamlit
+inference-sdk
+numpy
+Pillow
