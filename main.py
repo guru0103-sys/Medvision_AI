@@ -3,14 +3,15 @@ import io
 import time
 
 import numpy as np
+import requests
 import streamlit as st
 from PIL import Image, ImageDraw
-from inference_sdk import InferenceHTTPClient
 
 # ─── CONFIG ────────────────────────────────────────────────────────────────────
 APP_TITLE = "MedVision AI"
 APP_SUBTITLE = "Intelligent Medical Scan Analysis Platform"
 DEFAULT_MIN_CONFIDENCE = 0.25
+ROBOFLOW_API_URL = "https://detect.roboflow.com"
 
 # Scan type → Roboflow model ID mapping (swap with your trained model IDs)
 SCAN_MODELS = {
@@ -62,8 +63,15 @@ def get_api_key() -> str:
     return os.getenv("ROBOFLOW_API_KEY", "")
 
 
-def build_client(api_key: str) -> InferenceHTTPClient:
-    return InferenceHTTPClient(api_url="https://detect.roboflow.com", api_key=api_key)
+def infer_scan(image_bytes: bytes, model_id: str, api_key: str) -> dict:
+    response = requests.post(
+        f"{ROBOFLOW_API_URL}/{model_id}",
+        params={"api_key": api_key},
+        files={"file": ("scan.jpg", image_bytes, "application/octet-stream")},
+        timeout=60,
+    )
+    response.raise_for_status()
+    return response.json()
 
 
 def read_image(image_bytes: bytes) -> np.ndarray | None:
@@ -408,11 +416,9 @@ def main():
         return
 
     model_id = SCAN_MODELS.get(scan_type, list(SCAN_MODELS.values())[0])
-    client = build_client(api_key)
-
     with st.spinner("🔍 Analysing scan — please wait…"):
         try:
-            result = client.infer(image, model_id=model_id)
+            result = infer_scan(image_bytes, model_id=model_id, api_key=api_key)
         except Exception as e:
             st.error(f"Inference failed: {e}")
             return
@@ -451,4 +457,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
