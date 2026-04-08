@@ -1,4 +1,6 @@
 streamlit
 numpy
 Pillow
-requests
+inference-sdk
+plotly
+fpdf2
