@@ -13,6 +13,7 @@ __pycache__/
 .venv/
 venv/
 env/
+medvision-env/
 
 # OS
 .DS_Store
