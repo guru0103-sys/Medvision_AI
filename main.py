@@ -19,10 +19,10 @@ DEFAULT_MIN_CONFIDENCE = 0.25
 SESSION_TIMEOUT = 900
 
 SCAN_MODELS = {
-    "Brain MRI":         "brain-tumor-detection-dwj0e/1",
-    "Chest X-Ray":       "chest-xray-pneumonia-detection/1",
-    "CT Scan (General)": "ct-scan-anomaly-detection/1",
-    "Bone X-Ray":        "fracture-detection-xray/1",
+    "Brain MRI":         "brain-tumor-m2pbp-elkdc/1",
+    "Chest X-Ray":       "chest-xray-pneumonia-detection-pfeqf/1",
+    "CT Scan (General)": "ct-scan-dgzcv-hfgd9/1",
+    "Bone X-Ray":        "xray-fracture-v0kdz-cj637/1",
     "Retinal Scan":      "retinal-disease-detection/1",
 }
 
