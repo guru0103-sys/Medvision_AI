@@ -287,7 +287,7 @@ def render_report(report):
         </div>
     </div>""", unsafe_allow_html=True)
 
-    high_count = sum(1 for f in report["findings"] if f["severity"]=="HIGH")
+    high_count = sum(f["severity"] == "HIGH" for f in report["findings"])
     avg_conf   = float(np.mean([f["confidence"] for f in report["findings"]])) if report["findings"] else 0.0
 
     c1,c2,c3,c4 = st.columns(4)
@@ -412,18 +412,17 @@ def tab_analyse(scan_type, patient_id, min_conf, show_raw):
             mime="application/json", key="json_dl")
 
     with dl2:
-        if perm.get("can_export_pdf"):
-            if st.button("📄 Generate PDF Report", key="pdf_btn"):
-                with st.spinner("Building PDF..."):
-                    pdf_bytes = generate_pdf(rep, ann, image,
-                                             st.session_state["name"],
-                                             st.session_state["role"])
-                write_audit(st.session_state["username"], st.session_state["role"],
-                            "PDF_EXPORTED", f"Patient: {patient_id}")
-                st.download_button("⬇️ Download PDF",
-                    data=pdf_bytes,
-                    file_name=f"medvision_{patient_id}_{time.strftime('%Y%m%d_%H%M%S')}.pdf",
-                    mime="application/pdf", key="pdf_dl")
+        if perm.get("can_export_pdf") and st.button("📄 Generate PDF Report", key="pdf_btn"):
+            with st.spinner("Building PDF..."):
+                pdf_bytes = generate_pdf(rep, ann, image,
+                                         st.session_state["name"],
+                                         st.session_state["role"])
+            write_audit(st.session_state["username"], st.session_state["role"],
+                        "PDF_EXPORTED", f"Patient: {patient_id}")
+            st.download_button("⬇️ Download PDF",
+                data=pdf_bytes,
+                file_name=f"medvision_{patient_id}_{time.strftime('%Y%m%d_%H%M%S')}.pdf",
+                mime="application/pdf", key="pdf_dl")
 
 
 # ─── COMPARISON TAB ────────────────────────────────────────────────────────────
