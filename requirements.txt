@@ -1,7 +1,5 @@
 streamlit
 numpy
 Pillow
-inference-sdk
 plotly
 fpdf2
-opencv-python-headless

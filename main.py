@@ -1,9 +1,11 @@
-import os, io, time, json
+import os, io, time, json, base64
+import urllib.error
+import urllib.parse
+import urllib.request
 import numpy as np
 import streamlit as st
 import plotly.graph_objects as go
 from PIL import Image, ImageDraw, ImageFont
-from inference_sdk import InferenceHTTPClient
 
 from auth import (
     init_session, check_timeout, refresh_activity, logout,
@@ -53,7 +55,30 @@ def get_api_key():
     if "ROBOFLOW_API_KEY" in st.secrets: return st.secrets["ROBOFLOW_API_KEY"]
     return os.getenv("ROBOFLOW_API_KEY","")
 
-def build_client(api_key): return InferenceHTTPClient(api_url="https://detect.roboflow.com", api_key=api_key)
+def infer_image(image, model_id, api_key):
+    payload = io.BytesIO()
+    image.save(payload, format="PNG")
+
+    url = (
+        f"https://detect.roboflow.com/{urllib.parse.quote(model_id, safe='/')}?"
+        f"{urllib.parse.urlencode({'api_key': api_key})}"
+    )
+    request = urllib.request.Request(
+        url,
+        data=base64.b64encode(payload.getvalue()),
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        method="POST",
+    )
+
+    try:
+        with urllib.request.urlopen(request, timeout=60) as response:
+            charset = response.headers.get_content_charset() or "utf-8"
+            return json.loads(response.read().decode(charset))
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"Roboflow request failed ({exc.code}): {detail}") from exc
+    except urllib.error.URLError as exc:
+        raise RuntimeError(f"Roboflow request failed: {exc.reason}") from exc
 
 def read_image(f):
     try:
@@ -377,12 +402,11 @@ def tab_analyse(scan_type, patient_id, min_conf, show_raw):
         st.error("Could not decode image."); return
 
     model_id = SCAN_MODELS.get(scan_type, list(SCAN_MODELS.values())[0])
-    client   = build_client(api_key)
     ph       = st.empty()
 
     with ph: show_loader()
     try:
-        result = client.infer(np.array(image), model_id=model_id)
+        result = infer_image(image, model_id, api_key)
     except Exception as e:
         ph.empty(); st.error(f"Inference failed: {e}"); return
     ph.empty()
@@ -453,13 +477,12 @@ def tab_compare(scan_type, patient_id, min_conf):
         st.error("Could not decode one or both images."); return
 
     model_id = SCAN_MODELS.get(scan_type, list(SCAN_MODELS.values())[0])
-    client   = build_client(api_key)
     ph       = st.empty()
 
     with ph: show_loader()
     try:
-        res_a = client.infer(np.array(img_a), model_id=model_id)
-        res_b = client.infer(np.array(img_b), model_id=model_id)
+        res_a = infer_image(img_a, model_id, api_key)
+        res_b = infer_image(img_b, model_id, api_key)
     except Exception as e:
         ph.empty(); st.error(f"Inference failed: {e}"); return
     ph.empty()
